@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Calculadora de IMC</title>
+  <title>Calculadora de IMC e TMB</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -19,6 +19,10 @@
       margin-bottom: 5px;
     }
     input {
+      padding: 5px;
+      width: 100px;
+    }
+    select {
       padding: 5px;
       width: 100px;
     }
@@ -38,8 +42,17 @@
   </style>
 </head>
 <body>
-  <h1>Calculadora de IMC</h1>
+  <h1>Calculadora de IMC e TMB</h1>
   <form id="imcForm">
+    <label for="name">Nome:</label>
+    <input type="text" name="name" id="name" required>
+    <label for="sex">Sexo:</label>
+    <select name="sex" id="sex" required>
+      <option value="male">Masculino</option>
+      <option value="female">Feminino</option>
+    </select>
+    <label for="age">Idade:</label>
+    <input type="number" name="age" id="age" required>
     <label for="weight">Peso (kg):</label>
     <input type="number" step="0.01" name="weight" id="weight" required>
     <label for="height">Altura (m):</label>
@@ -52,25 +65,30 @@
     const resultDiv = document.getElementById('result');
 
     calculateBtn.addEventListener('click', () => {
+      const name = document.getElementById('name').value;
+      const sex = document.getElementById('sex').value;
+      const age = parseInt(document.getElementById('age').value);
       const weight = parseFloat(document.getElementById('weight').value);
       const height = parseFloat(document.getElementById('height').value);
 
-      if (isNaN(weight) || isNaN(height)) {
+      if (isNaN(age) || isNaN(weight) || isNaN(height)) {
         resultDiv.textContent = 'Por favor, insira valores válidos.';
         return;
       }
 
       const bmi = calculateBMI(weight, height);
       const status = getBMIStatus(bmi);
-
-      const idealWeight = getIdealWeight(height);
-      const totalWeight = getTotalWeight(weight, idealWeight);
+      const tmb = calculateTMB(weight, height, age, sex);
+      const totalWeight = getTotalWeight(weight, tmb);
 
       resultDiv.innerHTML = `
+        Nome: ${name}<br>
+        Sexo: ${sex === 'male' ? 'Masculino' : 'Feminino'}<br>
+        Idade: ${age} anos<br>
         Seu IMC é: ${bmi.toFixed(2)}<br>
         Status: ${status}<br>
-        Peso Ideal: ${idealWeight.toFixed(2)} kg<br>
-        Peso Total: ${totalWeight.toFixed(2)} kg
+        Gasto Energético Basal (TMB): ${tmb.toFixed(2)} kcal/dia<br>
+        Peso Total Considerando TMB: ${totalWeight.toFixed(2)} kg
       `;
     });
 
@@ -90,12 +108,16 @@
       }
     }
 
-    function getIdealWeight(height) {
-      return 22 * (height * height);
+    function calculateTMB(weight, height, age, sex) {
+      if (sex === 'male') {
+        return 88.362 + (13.397 * weight) + (4.799 * height * 100) - (5.677 * age);
+      } else {
+        return 447.593 + (9.247 * weight) + (3.098 * height * 100) - (4.330 * age);
+      }
     }
 
-    function getTotalWeight(weight, idealWeight) {
-      return weight + idealWeight;
+    function getTotalWeight(weight, tmb) {
+      return weight + tmb;
     }
   </script>
 </body>
